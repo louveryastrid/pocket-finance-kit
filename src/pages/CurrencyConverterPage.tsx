@@ -1,15 +1,15 @@
 import Navigation from '@/components/Navigation';
-import MoneyCalculator from '@/components/calculators/MoneyCalculator';
+import CurrencyConverter from '@/components/calculators/CurrencyConverter';
 
-const Index = () => {
+const CurrencyConverterPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto py-8 px-4">
-        <MoneyCalculator />
+        <CurrencyConverter />
       </main>
     </div>
   );
 };
 
-export default Index;
+export default CurrencyConverterPage;

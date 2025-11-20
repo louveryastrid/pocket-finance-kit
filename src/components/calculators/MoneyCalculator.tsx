@@ -3,179 +3,228 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calculator, DollarSign } from 'lucide-react';
 
+const currencyData: Record<string, any> = {
+  USD: {
+    name: 'US Dollar',
+    symbol: '$',
+    bills: [100, 50, 20, 10, 5, 2, 1],
+    coins: [0.25, 0.10, 0.05, 0.01],
+    coinLabels: ['Quarter', 'Dime', 'Nickel', 'Penny']
+  },
+  EUR: {
+    name: 'Euro',
+    symbol: '€',
+    bills: [500, 200, 100, 50, 20, 10, 5],
+    coins: [2, 1, 0.50, 0.20, 0.10, 0.05, 0.02, 0.01],
+    coinLabels: ['2€', '1€', '50¢', '20¢', '10¢', '5¢', '2¢', '1¢']
+  },
+  GBP: {
+    name: 'British Pound',
+    symbol: '£',
+    bills: [50, 20, 10, 5],
+    coins: [2, 1, 0.50, 0.20, 0.10, 0.05, 0.02, 0.01],
+    coinLabels: ['£2', '£1', '50p', '20p', '10p', '5p', '2p', '1p']
+  },
+  INR: {
+    name: 'Indian Rupee',
+    symbol: '₹',
+    bills: [2000, 500, 200, 100, 50, 20, 10, 5],
+    coins: [10, 5, 2, 1],
+    coinLabels: ['₹10', '₹5', '₹2', '₹1']
+  },
+  JPY: {
+    name: 'Japanese Yen',
+    symbol: '¥',
+    bills: [10000, 5000, 2000, 1000],
+    coins: [500, 100, 50, 10, 5, 1],
+    coinLabels: ['¥500', '¥100', '¥50', '¥10', '¥5', '¥1']
+  },
+  CAD: {
+    name: 'Canadian Dollar',
+    symbol: 'C$',
+    bills: [100, 50, 20, 10, 5],
+    coins: [2, 1, 0.25, 0.10, 0.05],
+    coinLabels: ['$2', '$1', '25¢', '10¢', '5¢']
+  },
+  AUD: {
+    name: 'Australian Dollar',
+    symbol: 'A$',
+    bills: [100, 50, 20, 10, 5],
+    coins: [2, 1, 0.50, 0.20, 0.10, 0.05],
+    coinLabels: ['$2', '$1', '50¢', '20¢', '10¢', '5¢']
+  },
+  CNY: {
+    name: 'Chinese Yuan',
+    symbol: '¥',
+    bills: [100, 50, 20, 10, 5, 1],
+    coins: [1, 0.50, 0.10],
+    coinLabels: ['¥1', '5角', '1角']
+  }
+};
+
 const MoneyCalculator = () => {
-  const [denominations, setDenominations] = useState({
-    hundreds: 0,
-    fifties: 0,
-    twenties: 0,
-    tens: 0,
-    fives: 0,
-    ones: 0,
-    quarters: 0,
-    dimes: 0,
-    nickels: 0,
-    pennies: 0,
-  });
+  const [currency, setCurrency] = useState('USD');
+  const [denominations, setDenominations] = useState<Record<string, string>>({});
 
-  const denominationValues = {
-    hundreds: 100,
-    fifties: 50,
-    twenties: 20,
-    tens: 10,
-    fives: 5,
-    ones: 1,
-    quarters: 0.25,
-    dimes: 0.10,
-    nickels: 0.05,
-    pennies: 0.01,
-  };
-
-  const denominationLabels = {
-    hundreds: '$100 Bills',
-    fifties: '$50 Bills',
-    twenties: '$20 Bills',
-    tens: '$10 Bills',
-    fives: '$5 Bills',
-    ones: '$1 Bills',
-    quarters: 'Quarters ($0.25)',
-    dimes: 'Dimes ($0.10)',
-    nickels: 'Nickels ($0.05)',
-    pennies: 'Pennies ($0.01)',
-  };
+  const currentCurrency = currencyData[currency];
 
   const calculateTotal = () => {
-    return Object.entries(denominations).reduce(
-      (total, [key, count]) => total + count * denominationValues[key as keyof typeof denominationValues],
-      0
-    );
+    let total = 0;
+    currentCurrency.bills.forEach((value: number) => {
+      const count = parseFloat(denominations[`bill_${value}`] || '0');
+      total += count * value;
+    });
+    currentCurrency.coins.forEach((value: number) => {
+      const count = parseFloat(denominations[`coin_${value}`] || '0');
+      total += count * value;
+    });
+    return total;
   };
 
-  const handleInputChange = (denomination: string, value: string) => {
-    const numValue = parseInt(value) || 0;
+  const handleInputChange = (key: string, value: string) => {
     setDenominations(prev => ({
       ...prev,
-      [denomination]: numValue,
+      [key]: value,
     }));
   };
 
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrency(newCurrency);
+    setDenominations({});
+  };
+
   const clearAll = () => {
-    setDenominations({
-      hundreds: 0,
-      fifties: 0,
-      twenties: 0,
-      tens: 0,
-      fives: 0,
-      ones: 0,
-      quarters: 0,
-      dimes: 0,
-      nickels: 0,
-      pennies: 0,
-    });
+    setDenominations({});
   };
 
   const total = calculateTotal();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Money Calculator</h1>
+      <div className="text-center space-y-3">
+        <h1 className="text-3xl font-bold text-foreground">Money Calculator</h1>
         <p className="text-muted-foreground">Count your cash denominations and get the total value</p>
+        
+        {/* Currency Selector */}
+        <div className="flex justify-center">
+          <Select value={currency} onValueChange={handleCurrencyChange}>
+            <SelectTrigger className="w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(currencyData).map(([code, data]) => (
+                <SelectItem key={code} value={code}>
+                  {data.symbol} {data.name} ({code})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4">
         {/* Bills Section */}
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <DollarSign className="h-4 w-4 text-primary" />
               Bills
             </CardTitle>
-            <CardDescription>Enter the quantity of each bill</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(denominationLabels)
-              .filter(([key]) => !['quarters', 'dimes', 'nickels', 'pennies'].includes(key))
-              .map(([key, label]) => (
-                <div key={key} className="space-y-2">
-                  <Label htmlFor={key}>{label}</Label>
-                  <Input
-                    id={key}
-                    type="number"
-                    value={denominations[key as keyof typeof denominations]}
-                    onChange={(e) => handleInputChange(key, e.target.value)}
-                    placeholder="0"
-                    min="0"
-                    className="text-center"
-                  />
-                </div>
-              ))}
+          <CardContent className="space-y-3">
+            {currentCurrency.bills.map((value: number) => (
+              <div key={value} className="flex items-center gap-2">
+                <Label htmlFor={`bill_${value}`} className="min-w-[80px] text-sm">
+                  {currentCurrency.symbol}{value}
+                </Label>
+                <Input
+                  id={`bill_${value}`}
+                  type="number"
+                  value={denominations[`bill_${value}`] || ''}
+                  onChange={(e) => handleInputChange(`bill_${value}`, e.target.value)}
+                  placeholder=""
+                  min="0"
+                  className="h-9 text-center"
+                />
+              </div>
+            ))}
           </CardContent>
         </Card>
 
         {/* Coins Section */}
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-secondary" />
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Calculator className="h-4 w-4 text-secondary" />
               Coins
             </CardTitle>
-            <CardDescription>Enter the quantity of each coin</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(denominationLabels)
-              .filter(([key]) => ['quarters', 'dimes', 'nickels', 'pennies'].includes(key))
-              .map(([key, label]) => (
-                <div key={key} className="space-y-2">
-                  <Label htmlFor={key}>{label}</Label>
-                  <Input
-                    id={key}
-                    type="number"
-                    value={denominations[key as keyof typeof denominations]}
-                    onChange={(e) => handleInputChange(key, e.target.value)}
-                    placeholder="0"
-                    min="0"
-                    className="text-center"
-                  />
-                </div>
-              ))}
+          <CardContent className="space-y-3">
+            {currentCurrency.coins.map((value: number, index: number) => (
+              <div key={value} className="flex items-center gap-2">
+                <Label htmlFor={`coin_${value}`} className="min-w-[80px] text-sm">
+                  {currentCurrency.coinLabels[index]}
+                </Label>
+                <Input
+                  id={`coin_${value}`}
+                  type="number"
+                  value={denominations[`coin_${value}`] || ''}
+                  onChange={(e) => handleInputChange(`coin_${value}`, e.target.value)}
+                  placeholder=""
+                  min="0"
+                  className="h-9 text-center"
+                />
+              </div>
+            ))}
           </CardContent>
         </Card>
 
         {/* Total Section */}
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-center">Total Value</CardTitle>
-            <CardDescription className="text-center">Your calculated total</CardDescription>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-center text-lg">Total Value</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">
-                ${total.toFixed(2)}
+              <div className="text-4xl font-bold text-primary mb-1">
+                {currentCurrency.symbol}{total.toFixed(2)}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Total cash value
               </p>
             </div>
 
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Breakdown:</h4>
-              <div className="text-sm space-y-1">
-                {Object.entries(denominations)
-                  .filter(([, count]) => count > 0)
-                  .map(([key, count]) => {
-                    const value = count * denominationValues[key as keyof typeof denominationValues];
+            {Object.keys(denominations).length > 0 && (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                <h4 className="font-semibold text-sm">Breakdown:</h4>
+                <div className="text-xs space-y-1">
+                  {currentCurrency.bills.map((value: number) => {
+                    const count = parseFloat(denominations[`bill_${value}`] || '0');
+                    if (count === 0) return null;
                     return (
-                      <div key={key} className="flex justify-between">
-                        <span>{count} × {denominationLabels[key as keyof typeof denominationLabels]}</span>
-                        <span>${value.toFixed(2)}</span>
+                      <div key={value} className="flex justify-between">
+                        <span>{count} × {currentCurrency.symbol}{value}</span>
+                        <span>{currentCurrency.symbol}{(count * value).toFixed(2)}</span>
                       </div>
                     );
                   })}
+                  {currentCurrency.coins.map((value: number, index: number) => {
+                    const count = parseFloat(denominations[`coin_${value}`] || '0');
+                    if (count === 0) return null;
+                    return (
+                      <div key={value} className="flex justify-between">
+                        <span>{count} × {currentCurrency.coinLabels[index]}</span>
+                        <span>{currentCurrency.symbol}{(count * value).toFixed(2)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             <Button 
               variant="outline" 
